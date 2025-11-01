@@ -1,0 +1,11 @@
+[project]
+name = "dsa4213-ay2526-group41"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=7.1.0",
+    "pandas>=2.3.3",
+    "weaviate-client>=4.17.0",
+]

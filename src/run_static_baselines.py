@@ -21,9 +21,11 @@ from config import (
     PORT,
     GRPC_PORT,
     MS_MARCO_COLLECTION_NAME,
+    NQ_COLLECTION_NAME,
     QA_EMBEDDING_MODEL_NAME,
     ARM_CONFIG,
     MS_MARCO_QUERIES_WITH_QRELS_PATH,
+    NQ_QUERIES_WITH_QRELS_PATH,
     RESULTS_DIR,
     SEARCH_LIMIT
 )
@@ -43,6 +45,9 @@ def main(args):
     if args.dataset_name == "ms_marco":
         QUERIES_WITH_QRELS_PATH = MS_MARCO_QUERIES_WITH_QRELS_PATH
         COLLECTION_NAME = MS_MARCO_COLLECTION_NAME
+    elif args.dataset_name == "nq":
+        QUERIES_WITH_QRELS_PATH = NQ_QUERIES_WITH_QRELS_PATH
+        COLLECTION_NAME = NQ_COLLECTION_NAME
     else:
         raise ValueError(f"Unsupported dataset: {args.dataset_name}")
     logger.info(f"Using dataset: {args.dataset_name}")

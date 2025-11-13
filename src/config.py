@@ -10,6 +10,7 @@ import os
 # Project root directory is 2 levels up from this file
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MS_MARCO_QUERIES_WITH_QRELS_PATH = os.path.join(PROJECT_ROOT, "data/ms_marco/processed/queries_with_qrels.jsonl")
+NQ_QUERIES_WITH_QRELS_PATH = os.path.join(PROJECT_ROOT, "data/nq/processed/queries_with_qrels.jsonl")
 RESULTS_DIR = os.path.join(PROJECT_ROOT, "results")
 LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
 
@@ -24,6 +25,7 @@ HOST = "127.0.0.1"
 PORT = 8080
 GRPC_PORT = 50051
 MS_MARCO_COLLECTION_NAME = "MS_MARCO"
+NQ_COLLECTION_NAME = "NQ"
 QA_EMBEDDING_MODEL_NAME = "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
 SEARCH_LIMIT = 10  # k value for retrieval
 

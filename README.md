@@ -46,6 +46,10 @@ docker compose --project-name mab-retrieval up -d
 ## MAB Training
 
 ```bash
+python src/run_static_baselines.py --metric recall --dataset_name ms_marco
+```
+
+```bash
 python src/train_epsilon_greedy.py --epsilons 0.01 0.1 0.3 --lambda_param 0.5 --metric recall --seed 42 --dataset_name ms_marco
 ```
 

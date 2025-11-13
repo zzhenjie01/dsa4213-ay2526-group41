@@ -95,7 +95,7 @@ def main():
         # -----------------------------------------------
         # Read and Ingest Passage Data in Batches
         # -----------------------------------------------
-        PASSAGE_COLLECTION_PATH = "../data/processed/filtered_passage_collection_with_embeddings.jsonl"
+        PASSAGES_WITH_EMBEDDINGS_PATH = "../data/msmarco/processed/passages_with_embeddings.jsonl"
         LOG_EVERY_N = 10000 # Log progress every N passages
 
         # Specifiy the collection to ingest into
@@ -103,13 +103,13 @@ def main():
 
         total_ingested = 0
         start_time = time.time()
-        logger.info(f"Starting data ingestion from {PASSAGE_COLLECTION_PATH}...")
+        logger.info(f"Starting data ingestion from {PASSAGES_WITH_EMBEDDINGS_PATH}...")
 
         # The `with` block ensures all remaining objects are sent
         # Adjust the batch size and concurrency connections as needed
         with collection.batch.fixed_size(batch_size=2000, concurrent_requests=6) as batch:
             try:
-                with open(PASSAGE_COLLECTION_PATH, "r", encoding="utf-8") as f:
+                with open(PASSAGES_WITH_EMBEDDINGS_PATH, "r", encoding="utf-8") as f:
                     for line in f:
                         if not line.strip():
                             continue  # skip empty lines

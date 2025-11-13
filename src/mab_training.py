@@ -5,11 +5,11 @@ import random
 import jsonlines
 import json
 import weaviate
-from mab_algorithms import EpsilonGreedy, UCB, ThompsonSampling
+from utils.mab_algorithms import EpsilonGreedy, UCB, ThompsonSampling
 from sentence_transformers import SentenceTransformer
 import os
 import logging
-from helpers import moving_average
+from utils.helpers import moving_average
 
 # -----------------------------------------------
 # Set random seed for reproducibility
@@ -31,7 +31,7 @@ HOST = "127.0.0.1"
 PORT = 8080
 GRPC_PORT = 50051
 COLLECTION_NAME = "MS_MARCO"
-QUERIES_QREL_PATH = "../data/processed/formatted_train_data.jsonl"
+QUERIES_QREL_PATH = "../data/msmarco/processed/queries_with_qrels.jsonl"
 EMBEDDING_MODEL_NAME = "sentence-transformers/multi-qa-MiniLM-L6-cos-v1"
 ARM_METHODS = ["bm25", "dense", "hybrid"]
 HYBRID_ALPHA = 0.5  # Weight for hybrid retrieval

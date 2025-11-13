@@ -135,55 +135,87 @@ class UCB(BaseBandit):
 
 class ThompsonSampling(BaseBandit):
     """
-    Thompson Sampling (for Bernoulli rewards) MAB Algorithm.
-    Models the reward probability of each arm as a Beta distribution.
+    Empirical Gaussian Thompson Sampling MAB Algorithm.
     
+    This algorithm is suited for continuous rewards (positive or negative),
+    which fits the `reward = score - lambda * norm_cost` structure.
+    
+    It models the reward for each arm as a Normal (Gaussian) distribution
+    by learning the empirical mean (self.Q) and empirical variance 
+    (from self.sum_squared_rewards) of the rewards.
+    
+    It samples from this learned distribution to balance exploration/exploitation:
+    - The mean of the sample is the arm's estimated average reward (exploitation).
+    - The standard deviation (scale) of the sample is derived from the
+      standard error of the mean, which shrinks as more data is collected
+      (exploration).
+
     Parameters:
     - k_arms (int): The number of arms.
     - rng (np.random.Generator): Random number generator.
     """
     def __init__(self, k_arms, rng: np.random.Generator):
+        # The base __init__ calls self.reset()
         super().__init__(k_arms, rng)
-        self.reset() # Base reset is fine, but we add alpha/beta
         
     def reset(self):
-        """
-        Resets the bandit's state.
-        Alpha and Beta are the parameters for the Beta distribution.
-        We initialize to 1 (Beta(1,1)), which is a uniform prior.
-        """
+        """Resets the bandit's state, including Q, N, and sum_squared_rewards."""
+        # Reset Q, N, and timesteps from the base class
         super().reset()
-        # Alpha: counts of successes (reward=1)
-        self.alpha = np.ones(self.k_arms)
-        # Beta: counts of failures (reward=0)
-        self.beta = np.ones(self.k_arms)
-
+        # Add tracker for sum of squared rewards (for variance calculation)
+        self.sum_squared_rewards = np.zeros(self.k_arms)
+    
     def select_arm(self):
         """
-        Draw a sample from each arm's current Beta(alpha, beta) distribution.
-        Select the arm that produced the highest sample.
+        Draw a sample from each arm's learned Normal distribution and
+        select the arm with the highest sample.
         """
         self.timesteps += 1
-        # Draw samples
-        samples = [
-            self.rng.beta(self.alpha[i], self.beta[i]) 
-            for i in range(self.k_arms)
-        ]
+        samples = np.zeros(self.k_arms)
+        
+        for i in range(self.k_arms):
+            # The mean of our belief is the current empirical mean
+            mean = self.Q[i]
+            
+            # Calculate the standard error of the mean as our uncertainty (scale)
+            if self.N[i] > 1:
+                # Calculate empirical variance: Var(X) = E[X^2] - (E[X])^2
+                # E[X^2] = sum_squared_rewards / N
+                # E[X]   = Q
+                variance = (self.sum_squared_rewards[i] / self.N[i]) - self.Q[i]**2
+                
+                # Clamp variance to a small positive number for numerical stability
+                # This prevents sqrt(0) or sqrt(negative) from floating point errors
+                variance = max(variance, 1e-6) 
+                
+                # Our uncertainty is in the mean, so we use standard error: sqrt(var / N)
+                # Added a small constant to avoid zero std deviation
+                std_error = np.sqrt((variance / self.N[i]) + 1e-8)
+            else:
+                # Not enough data to calculate variance (N=0 or N=1).
+                # Use a large standard deviation to encourage initial exploration.
+                std_error = 1.0 # Initial prior uncertainty
+            
+            # Draw a sample from N(mean, std_error)
+            samples[i] = self.rng.normal(loc=mean, scale=std_error)
+        
+        # Select the arm with the highest sample ("optimism in the face of uncertainty")
         return np.argmax(samples)
-
+    
     def update(self, arm_index, reward):
         """
-        Update the alpha or beta parameter for the pulled arm.
-        Assumes reward is binary (1 for success, 0 for failure).
-        Thompson Sampling doesn't use Q-values and N directly.
+        Update the Q-value (mean), N (count), and sum_squared_rewards
+        for the pulled arm.
         """
-        # We discretize the reward: > 0.5 is a "success"
-        reward_binary = 1 if reward > 0.5 else 0
+        # 1. Update count (must be first)
+        self.N[arm_index] += 1
         
-        if reward_binary == 1:
-            self.alpha[arm_index] += 1
-        else:
-            self.beta[arm_index] += 1
+        # 2. Update sum of squares (for variance calculation)
+        self.sum_squared_rewards[arm_index] += reward ** 2
+        
+        # 3. Update mean (Q-value) using incremental average
+        # Q_new = Q_old + (1/N) * (reward - Q_old)
+        self.Q[arm_index] += (1.0 / self.N[arm_index]) * (reward - self.Q[arm_index])
 
     def __str__(self):
-        return "ThompsonSampling"
+        return "ThompsonSampling(EmpiricalGaussian)"

@@ -1,17 +1,12 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import time
-import random
-import jsonlines
-import weaviate
-import weaviate.classes.query as wq
+"""
+Contains the Multi-Armed Bandit algorithm classes.
 
-# -----------------------------------------------
-# Set random seed for reproducibility
-# -----------------------------------------------
-SEED = 42
-random.seed(SEED)
-np.random.seed(SEED)
+Key change:
+- All algorithms now accept a `numpy.random.Generator` instance (`rng`)
+  for reproducible, encapsulated randomness.
+"""
+
+import numpy as np
 
 # -----------------------------------------------
 # Bandit Algorithm Classes
@@ -23,11 +18,13 @@ class BaseBandit:
     
     Parameters:
     - k_arms (int): The number of arms (retrievers) in the bandit.
+    - rng (np.random.Generator): A NumPy random number generator instance.
     """
-    def __init__(self, k_arms):
+    def __init__(self, k_arms, rng: np.random.Generator):
         if k_arms <= 0:
             raise ValueError("Number of arms must be greater than 0")
         self.k_arms = k_arms
+        self.rng = rng
         self.reset()
 
     def select_arm(self):
@@ -52,14 +49,15 @@ class EpsilonGreedy(BaseBandit):
     
     Parameters:
     - k_arms (int): The number of arms.
+    - rng (np.random.Generator): Random number generator.
     - epsilon (float): The probability of exploring (choosing a random arm).
                        Must be between 0 and 1.
     """
-    def __init__(self, k_arms, epsilon):
+    def __init__(self, k_arms, rng: np.random.Generator, epsilon: float):
         if not 0.0 <= epsilon <= 1.0:
             raise ValueError("Epsilon must be between 0 and 1")
         self.epsilon = epsilon
-        super().__init__(k_arms)
+        super().__init__(k_arms, rng)
         
     def select_arm(self):
         """
@@ -67,9 +65,9 @@ class EpsilonGreedy(BaseBandit):
         With probability 1-epsilon, choose the arm with the highest Q-value (exploit).
         """
         self.timesteps += 1
-        if random.random() < self.epsilon:
+        if self.rng.random() < self.epsilon:
             # Explore
-            return random.randint(0, self.k_arms - 1)
+            return self.rng.integers(0, self.k_arms)
         else:
             # Exploit
             # If multiple arms have the same max Q-value, np.argmax returns the first one.
@@ -94,19 +92,19 @@ class UCB(BaseBandit):
     
     Parameters:
     - k_arms (int): The number of arms.
+    - rng (np.random.Generator): Random number generator.
     - c (float): The exploration parameter. A higher 'c' encourages more exploration.
                  A common value is 2.
     """
-    def __init__(self, k_arms, c):
+    def __init__(self, k_arms, rng: np.random.Generator, c: float):
         if c < 0:
             raise ValueError("Exploration parameter 'c' must be non-negative")
         self.c = c
-        super().__init__(k_arms)
+        super().__init__(k_arms, rng)
 
     def select_arm(self):
         """
         Selects the arm that maximizes the UCB score: Q(a) + c * sqrt(ln(t) / N(a))
-        
         't' is the current total timestep.
         """
         self.timesteps += 1
@@ -138,14 +136,14 @@ class UCB(BaseBandit):
 class ThompsonSampling(BaseBandit):
     """
     Thompson Sampling (for Bernoulli rewards) MAB Algorithm.
-    
     Models the reward probability of each arm as a Beta distribution.
     
     Parameters:
     - k_arms (int): The number of arms.
+    - rng (np.random.Generator): Random number generator.
     """
-    def __init__(self, k_arms):
-        super().__init__(k_arms)
+    def __init__(self, k_arms, rng: np.random.Generator):
+        super().__init__(k_arms, rng)
         self.reset() # Base reset is fine, but we add alpha/beta
         
     def reset(self):
@@ -168,7 +166,7 @@ class ThompsonSampling(BaseBandit):
         self.timesteps += 1
         # Draw samples
         samples = [
-            np.random.beta(self.alpha[i], self.beta[i]) 
+            self.rng.beta(self.alpha[i], self.beta[i]) 
             for i in range(self.k_arms)
         ]
         return np.argmax(samples)
@@ -177,10 +175,12 @@ class ThompsonSampling(BaseBandit):
         """
         Update the alpha or beta parameter for the pulled arm.
         Assumes reward is binary (1 for success, 0 for failure).
+        Thompson Sampling doesn't use Q-values and N directly.
         """
-        # reward should be in [0, 1]
-        reward = max(0, min(1, reward))
-        if reward > 0.5:
+        # We discretize the reward: > 0.5 is a "success"
+        reward_binary = 1 if reward > 0.5 else 0
+        
+        if reward_binary == 1:
             self.alpha[arm_index] += 1
         else:
             self.beta[arm_index] += 1

@@ -42,3 +42,18 @@ cd docker
 ```bash
 docker compose --project-name mab-retrieval up -d
 ```
+
+## MAB Training
+
+```bash
+python src/train_epsilon_greedy.py --epsilons 0.01 0.1 0.3 --lambda_param 0.5 --metric recall --seed 42 --dataset_name ms_marco
+```
+
+
+```bash
+python src/train_ucb.py --c_values 1.0 2.0 3.0 --lambda_param 0.5 --metric recall --seed 42 --dataset_name ms_marco
+```
+
+```bash
+python src/train_thompson.py --lambda_param 0.5 --metric recall --seed 42 --dataset_name ms_marco
+```

@@ -95,7 +95,7 @@ def main():
         # -----------------------------------------------
         # Read and Ingest Passage Data in Batches
         # -----------------------------------------------
-        PASSAGES_WITH_EMBEDDINGS_PATH = "../data/msmarco/processed/passages_with_embeddings.jsonl"
+        PASSAGES_WITH_EMBEDDINGS_PATH = "../data/ms_marco/processed/passages_with_embeddings.jsonl"
         LOG_EVERY_N = 10000 # Log progress every N passages
 
         # Specifiy the collection to ingest into

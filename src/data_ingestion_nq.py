@@ -15,7 +15,7 @@ print(f"Current working directory set to: {os.getcwd()}")
 # -----------------------------------------------
 # Configure Logging
 # -----------------------------------------------
-LOG_DIR = os.path.join(os.getcwd(), "logs")
+LOG_DIR = os.path.join(os.getcwd(), "../logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 timestamp = time.strftime("%Y%m%d-%H%M%S")
 LOG_PATH = os.path.join(LOG_DIR, f"weaviate_ingestion_{timestamp}.log")

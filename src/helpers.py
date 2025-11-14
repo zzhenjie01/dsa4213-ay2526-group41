@@ -5,8 +5,21 @@ import numpy as np
 import logging
 import time
 import os
+import json
 import jsonlines
 from config import LOG_DIR
+
+
+def load_result(filepath: str) -> dict:
+    """Loads a single result JSON file."""
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+        return data
+    except Exception as e:
+        print(f"Error loading {filepath}: {e}")
+        return None
+
 
 def moving_average(data: list, window_size: int, mode: str ='valid') -> list:
     """

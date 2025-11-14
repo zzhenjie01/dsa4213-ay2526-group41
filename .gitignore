@@ -211,3 +211,6 @@ __marimo__/
 *.tsv
 *.csv
 data/
+
+# Mac specific
+.DS_Store

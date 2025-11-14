@@ -8,7 +8,7 @@ import os
 import jsonlines
 from config import LOG_DIR
 
-def moving_average(data: list, window_size: int, mode: str ='same') -> list:
+def moving_average(data: list, window_size: int, mode: str ='valid') -> list:
     """
     Calculates the moving average of a list.
     

@@ -93,6 +93,8 @@ python src/data_ingestion_nq.py
 
 ## 🖥️ MAB Training
 
+Run the following commands to perform the different experiments with different hyperparameters and datasets.
+
 ### Static Baseline Retrievals
 
 **MS MARCO:**
